@@ -21,6 +21,15 @@ public class User {
     @Column(nullable = false, length = 100)
     private String username;
 
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
