@@ -1,9 +1,70 @@
 services:
+
   postgres:
-    image: 'postgres:latest'
-    environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+    image: postgres:16
+    container_name: enanos_postgres
+    restart: unless-stopped
     ports:
-      - '5432'
+      - "5432:5432"
+
+    environment:
+      POSTGRES_DB: peleadoresenanos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: laura2006
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    networks:
+      - backend
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1
+    container_name: enanos_keycloak
+    restart: unless-stopped
+    command: start-dev --import-realm
+
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_DB: dev-mem
+      KC_HTTP_PORT: 9090
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HEALTH_ENABLED: "true"
+
+    ports:
+      - "9090:9090"
+
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+
+    networks:
+      - backend
+
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "exec 3<>/dev/tcp/localhost/9090 && echo -e 'GET /realms/enanos-realm HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3 && timeout 2 cat <&3 | grep -q 'enanos-realm'"
+      ]
+      interval: 20s
+      timeout: 15s
+      retries: 12
+      start_period: 60s
+
+
+volumes:
+  postgres_data:
+
+
+networks:
+  backend:
+    driver: bridge

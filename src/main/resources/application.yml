@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: enanospeleadores2
+
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/peleadoresenanos}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: ${SPRING_JPA_SHOW_SQL:true}
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: update
+
+  sql:
+    init:
+      mode: always
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:9090/realms/enanos-realm}
+
+server:
+  port: 8080
